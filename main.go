@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/joho/godotenv"
+	"log"
 	"net/http"
 	"os"
 )
@@ -11,6 +13,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	// use .env reading library -> get config from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Println("Error loading .env file!")
+	}
 
 	// setting port
 	port := os.Getenv("PORT")
