@@ -2,14 +2,23 @@ package main
 
 import (
 	"github.com/joho/godotenv"
+	"html/template" // html/template pkg -> safe against code injection
 	"log"
 	"net/http"
 	"os"
 )
 
+// parse the index file
+var tpl = template.Must(template.ParseFiles("index.html"))
+
+// indexHandler is a simple http request handler
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// simply write this into the <body> section
-	w.Write([]byte("<h1>Hello World!</h1>"))
+	//w.Write([]byte("<h1>Hello World!</h1>"))
+
+	// update version -> use the template to execute
+	// now return the index.html file
+	tpl.Execute(w, nil)
 }
 
 func main() {
