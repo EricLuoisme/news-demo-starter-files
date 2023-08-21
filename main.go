@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/joho/godotenv"
 	"html/template" // html/template pkg -> safe against code injection
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -19,6 +21,25 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// update version -> use the template to execute
 	// now return the index.html file
 	tpl.Execute(w, nil)
+}
+
+// searchHandler is for handling search request
+func searchHandler(w http.ResponseWriter, r *http.Request) {
+	u, err := url.Parse(r.URL.String())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	params := u.Query()
+	searchQuery := params.Get("q")
+	page := params.Get("page")
+	if page == "" {
+		page = "1"
+	}
+
+	fmt.Println("Search Query is: ", searchQuery)
+	fmt.Println("Page is: ", page)
 }
 
 func main() {
@@ -42,7 +63,8 @@ func main() {
 	// which is essentially a router that help you direct incoming HTTP requests to appropriate handler function
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", indexHandler)                        // 'pair' the path to the handler
+	mux.HandleFunc("/", indexHandler)                        // 'pair' the index path to the handler
+	mux.HandleFunc("/search", searchHandler)                 // 'pair' the search path to the handler
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs)) // pass assets to file system
 
 	http.ListenAndServe(":"+port, mux)
