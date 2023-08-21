@@ -35,12 +35,16 @@ func main() {
 		port = "9090"
 	}
 
+	// init a file server by passing the directory where all static files are placed
+	fs := http.FileServer(http.Dir("assets"))
+
 	// create new multiplexer, which allowing you to associate different handlers with different URL path
 	// which is essentially a router that help you direct incoming HTTP requests to appropriate handler function
 	mux := http.NewServeMux()
 
-	// 'pair' the path to the handler
-	mux.HandleFunc("/", indexHandler)
+	mux.HandleFunc("/", indexHandler)                        // 'pair' the path to the handler
+	mux.Handle("/assets/", http.StripPrefix("/assets/", fs)) // pass assets to file system
+
 	http.ListenAndServe(":"+port, mux)
 
 }
