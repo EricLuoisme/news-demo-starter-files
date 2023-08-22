@@ -78,6 +78,9 @@ func searchHandler(newsapi *news.Client) http.HandlerFunc {
 			TotalPage: int(math.Ceil(float64(results.TotalResults) / float64(newsapi.PageSize))),
 			Results:   results,
 		}
+		if ok := !search.IsLastPage(); ok {
+			search.NextPage++
+		}
 
 		// write response -> back to index.html
 		// first write to an empty buffer -> then buffer is written to the ResponseWriter
@@ -90,6 +93,21 @@ func searchHandler(newsapi *news.Client) http.HandlerFunc {
 		}
 		buf.WriteTo(w)
 	}
+}
+
+func (s *Search) IsLastPage() bool {
+	return s.NextPage >= s.TotalPage
+}
+
+func (s *Search) PreviousPage() int {
+	return s.CurrentPage() - 1
+}
+
+func (s *Search) CurrentPage() int {
+	if s.NextPage == 1 {
+		return s.NextPage
+	}
+	return s.NextPage - 1
 }
 
 func main() {
