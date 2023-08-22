@@ -1,16 +1,26 @@
 package main
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/freshman-tech/news-demo-starter-files/news"
 	"github.com/joho/godotenv"
 	"html/template" // html/template pkg -> safe against code injection
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 )
+
+// Search represent each query make by the user
+type Search struct {
+	Query     string
+	NextPage  int
+	TotalPage int
+	Results   *news.Results
+}
 
 // parse the index file
 var tpl = template.Must(template.ParseFiles("index.html"))
@@ -22,7 +32,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// update version -> use the template to execute
 	// now return the index.html file
-	tpl.Execute(w, nil)
+	buf := &bytes.Buffer{}
+	err := tpl.Execute(buf, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	buf.WriteTo(w)
 }
 
 // searchHandler is for handling search request
@@ -49,7 +66,29 @@ func searchHandler(newsapi *news.Client) http.HandlerFunc {
 			return
 		}
 
-		fmt.Printf("%+v", results)
+		// construct resp
+		nextPage, err := strconv.Atoi(page)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		search := &Search{
+			Query:     searchQuery,
+			NextPage:  nextPage,
+			TotalPage: int(math.Ceil(float64(results.TotalResults) / float64(newsapi.PageSize))),
+			Results:   results,
+		}
+
+		// write response -> back to index.html
+		// first write to an empty buffer -> then buffer is written to the ResponseWriter
+		// then execute tml directly on ResponseWriter
+		buf := &bytes.Buffer{}
+		err = tpl.Execute(buf, search)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		buf.WriteTo(w)
 	}
 }
 
