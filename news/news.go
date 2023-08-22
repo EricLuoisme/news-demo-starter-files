@@ -16,10 +16,10 @@ type Client struct {
 }
 
 // Article construct by using https://mholt.github.io/json-to-go/
-type Article []struct {
+type Article struct {
 	Source struct {
-		ID   any    `json:"id"`
-		Name string `json:"name"`
+		ID   interface{} `json:"id"`
+		Name string      `json:"name"`
 	} `json:"source"`
 	Author      string    `json:"author"`
 	Title       string    `json:"title"`
